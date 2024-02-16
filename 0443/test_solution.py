@@ -5,6 +5,7 @@ import src
 
 
 @pytest.mark.parametrize(
+    # NOTE you need more complex examples to test all scenarios
     "test_input, expected_len, expected_arr",
     [
         (["a", "a", "b", "b", "c", "c", "c"], 6, ["a", "2", "b", "2", "c", "3"]),
