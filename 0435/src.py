@@ -38,10 +38,10 @@ class Solution:
         As long as another interval has the same end time, we remove it and count it
         (Could be done with the latest start time and going in reverse)
 
-        Runtime 55 ms
-        Beats 82.03 % of users with Python3
-        Memory 16.74 MB
-        Beats 66.94 % of users with Python3
+        Runtime 991 ms
+        Beats 98.62 % of users with Python3
+        Memory 55.30 MB
+        Beats 51.93 % of users with Python3
         """
         end, cnt = float("-inf"), 0
         # intervals.sort(key=lambda x: x[1])
