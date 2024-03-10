@@ -1,96 +1,78 @@
 #########################################################################################################################################################
-# We are given an array asteroids of integers representing asteroids in a row.
-#
-# For each asteroid, the absolute value represents its size, and the sign represents its direction (positive meaning right, negative meaning left). Each asteroid moves at the same speed.
-#
-# Find out the state of the asteroids after all collisions. If two asteroids meet, the smaller one will explode. If both are the same size, both will explode. Two asteroids moving in the same direction will never meet.
+# Given an array of integers temperatures represents the daily temperatures, return an array answer such that answer[i] is the number of days you have to wait after the ith day to get a warmer temperature. If there is no future day for which this is possible, keep answer[i] == 0 instead.
 #
 #
 #
 # Example 1:
 #
-# Input: asteroids = [5,10,-5]
-# Output: [5,10]
-# Explanation: The 10 and -5 collide resulting in 10. The 5 and 10 never collide.
+# Input: temperatures = [73,74,75,71,69,72,76,73]
+# Output: [1,1,4,2,1,1,0,0]
 # Example 2:
 #
-# Input: asteroids = [8,-8]
-# Output: []
-# Explanation: The 8 and -8 collide exploding each other.
+# Input: temperatures = [30,40,50,60]
+# Output: [1,1,1,0]
 # Example 3:
 #
-# Input: asteroids = [10,2,-5]
-# Output: [10]
-# Explanation: The 2 and -5 collide resulting in -5. The 10 and -5 collide resulting in 10.
+# Input: temperatures = [30,60,90]
+# Output: [1,1,0]
 #
 #
 # Constraints:
 #
-# 2 <= asteroids.length <= 104
-# -1000 <= asteroids[i] <= 1000
-# asteroids[i] != 0
+# 1 <= temperatures.length <= 105
+# 30 <= temperatures[i] <= 100
 #########################################################################################################################################################
+import heapq
+from collections import defaultdict, deque
 from typing import List
-from collections import deque
 
 
 class Solution:
 
-    def asteroid_collision(self, asteroids: List[int]) -> List[int]:
-        """
-        It's a LIFO stack solution.
-        For each asteroid, check if it should go in the stack, or destroy the last element of the stack.
+    def daily_temperatures(self, temperatures: List[int]) -> List[int]:
+        # The solutions was stack, but also to be smart and consider that we can remove all temps that are below the current
+        # from the end of the stack. As when we check it, only the most recent higher temperature is important
+        # I think I would still do it reversed if I could
+        results = [0] * len(temperatures)
+        stack = []
+        for i, temp in enumerate(temperatures):
+            while stack and temperatures[stack[-1]] < temp:
+                index = stack.pop()
+                results[index] = i - index
+            stack.append(i)
+        return results
 
-        Runtime 84 ms
-        Beats 57.13 % of users with Python3
-        Memory 17.97 MB
-        Beats 58.93 % of users with Python3
-        """
-        stack = deque()
-        stack.append(asteroids.pop(0))
+    def daily_temperatures_not_so_slow(self, temperatures: List[int]) -> List[int]:
+        # Still slow, but not TOO slow
+        # There must be a way to ot have to rebuild the sorted_last_temps everytime
+        last_temps = {}
+        for i in range(len(temperatures) - 1, -1, -1):
+            temp, temperatures[i] = temperatures[i], 0
+            sorted_last_temps = [i for i in last_temps.items()]
+            sorted_last_temps.sort(key=lambda x: x[1])
 
-        for asteroid in asteroids:
-            if not stack:
-                stack.append(asteroid)
-                continue
+            for e in sorted_last_temps:
+                if e[0] > temp:
+                    temperatures[i] = e[1] - i
+                    break
 
-            # not the same direction if product is negative
-            # handling the case where it IS the same direction
-            if stack[-1] * asteroid > 0:
-                stack.append(asteroid)
-                continue
+            last_temps[temp] = i
 
-            # crash only if the last stack goes right, and this asteroid goes left
-            # let's handle the other case first
-            if stack[-1] < 0:
-                stack.append(asteroid)
-                continue
+        return temperatures
 
-            # we get to the meat of it, need to handle collisions
-            handle_collision(stack, asteroid)
+    def slow_daily_temperatures(self, temperatures: List[int]) -> List[int]:
+        # This one works but is too slow for big lists
+        # So need to find the trick
+        r = []
 
-        return list(stack)
+        for i, e in enumerate(temperatures):
+            r.append(check_temps(e, temperatures[i + 1 :]) + 1)
+
+        return r
 
 
-def handle_collision(stack: deque[int], ast: int) -> None:
-    # If we destroyed all the stack or both the ast go left
-    if not stack or (stack[-1] < 0 and ast < 0):
-        stack.append(ast)
-        return
-
-    # if both ast are the same size
-    if abs(ast) == abs(stack[-1]):
-        # the stack ast is destroyed, we end the recursion
-        stack.pop()
-        return
-
-    # if the stack asteroid is bigger
-    if abs(ast) < abs(stack[-1]):
-        # we leave the stack as is and end the recursion
-        return
-
-    # if the collision ast is bigger
-    if abs(ast) > abs(stack[-1]):
-        # we destroy the stack ast and go to the next recursion
-        stack.pop()
-        return handle_collision(stack, ast)
+def check_temps(temperature: int, others: List[int]) -> int:
+    for j, e2 in enumerate(others):
+        if e2 > temperature:
+            return j
+    return -1
